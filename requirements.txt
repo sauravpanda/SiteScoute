@@ -1,0 +1,5 @@
+browser-use==0.2.5
+faiss-cpu==1.10.0
+python-dotenv
+langchain-ollama
+asyncio 
