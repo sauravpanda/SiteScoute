@@ -98,51 +98,42 @@ WEBSITES = {
     }
 }
 
-async def check_website(browser_session: BrowserSession, llm: ChatOllama, url: str, name: str) -> tuple[str, dict]:
-    """Check website status using browser-use agent"""
+async def check_website(llm: ChatOllama, url: str, name: str, browser_profile: BrowserProfile) -> tuple[str, dict]:
     logger.info(f"Checking website: {name} ({url})")
-    
-    task = f"""Visit {url} and check if the website is working properly.
-    Simply respond with a JSON:
-    {{
-        "status": "UP" if the page loads successfully, "DOWN" if it fails,
-        "reason": "brief explanation of what you see"
-    }}
-    """
-    
+    task = f"""Visit {url} and check if the website is working properly.\nSimply respond with a JSON:\n{{\n    \"status\": \"UP | DOWN\",\n    \"reason\": \"brief explanation of what you see\"\n}}\n"""
+    browser_session = BrowserSession(browser_profile=browser_profile, headless=False)
     try:
-        # Create and run agent for this website
-        agent = Agent(
-            task=task,
-            browser_session=browser_session,
-            llm=llm
-        )
-        
-        result = await agent.run()
-        
-        # Extract the last message from the agent's history
-        last_message = result.messages[-1].content if result.messages else ""
-        logger.debug(f"Agent response for {name}: {last_message[:200]}...")
-        
+        await browser_session.start()
+        page = await browser_session.new_tab()
         try:
-            # Try to parse the JSON response
-            analysis = json.loads(last_message)
-            is_up = analysis.get('status') == 'UP'
-            status = "UP" if is_up else "DOWN"
-            logger.info(f"Website {name} status: {status}")
-            return name, {
-                "status": status,
-                "url": url,
-                "error": analysis.get('reason', 'No reason provided') if not is_up else None
-            }
-        except json.JSONDecodeError as e:
-            logger.warning(f"Failed to parse JSON response for {name}: {str(e)}")
-            return name, {
-                "status": "DOWN",
-                "url": url,
-                "error": f"Invalid response format: {last_message}"
-            }
-            
+            agent = Agent(
+                task=task,
+                browser_session=browser_session,
+                page=page,
+                llm=llm
+            )
+            result = await agent.run()
+            last_message = result.final_result() if result else ""
+            logger.debug(f"Agent response for {name}: {last_message[:200]}...")
+            try:
+                analysis = json.loads(last_message)
+                is_up = analysis.get('status') == 'UP'
+                status = "UP" if is_up else "DOWN"
+                logger.info(f"Website {name} status: {status}")
+                return name, {
+                    "status": status,
+                    "url": url,
+                    "error": analysis.get('reason', 'No reason provided') if not is_up else None
+                }
+            except json.JSONDecodeError as e:
+                logger.warning(f"Failed to parse JSON response for {name}: {str(e)}")
+                return name, {
+                    "status": "DOWN",
+                    "url": url,
+                    "error": f"Invalid response format: {last_message}"
+                }
+        finally:
+            await page.close()
     except Exception as e:
         logger.error(f"Error checking {name}: {str(e)}", exc_info=True)
         return name, {
@@ -150,77 +141,75 @@ async def check_website(browser_session: BrowserSession, llm: ChatOllama, url: s
             "url": url,
             "error": str(e)
         }
+    finally:
+        await browser_session.close()
+
+def process_batch(llm: ChatOllama, batch: list[tuple[str, str, str]], browser_profile: BrowserProfile):
+    tasks = [
+        check_website(llm, url, name, browser_profile)
+        for name, url, _ in batch
+    ]
+    return asyncio.gather(*tasks, return_exceptions=True)
 
 async def main():
     logger.info("Starting SiteScout website monitoring")
-    
-    # Initialize browser session with recommended settings
-    browser_session = BrowserSession(
-        browser_profile=BrowserProfile(
-            disable_security=True,
-            headless=False,
-            save_recording_path='./tmp/recordings',
-            user_data_dir='~/.config/browseruse/profiles/default',
-        ),
-        keep_alive=True,
-        max_tabs=20  # Increased for better parallel processing
+    # Configure browser profile with appropriate settings for website monitoring
+    browser_profile = BrowserProfile(
+        headless=False,  # Run in headless mode for monitoring
+        viewport={"width": 1280, "height": 800},  # Standard desktop viewport
+        wait_for_network_idle_page_load_time=3.0,  # Wait longer for slower sites
+        maximum_wait_page_load_time=10.0,  # Increase max wait time for slow sites
+        wait_between_actions=0.5,  # Reasonable wait between actions
+        highlight_elements=False,  # Disable element highlighting for monitoring
+        viewport_expansion=0,  # No need for viewport expansion in monitoring
+        disable_security=False,  # Keep security enabled
+        allowed_domains=None,  # Allow all domains for monitoring
+        user_data_dir=None,  # Use ephemeral profile
+        storage_state=None,  # No need for persistent storage
+        save_recording_path=None,  # Disable recording for monitoring
     )
-    
     try:
-        logger.info("Starting browser session")
-        await browser_session.start()
-        
-        # Initialize LLM
         logger.info("Initializing LLM")
         llm = ChatOllama(
             model='qwen2.5:32b-instruct-q4_K_M',
             num_ctx=32000,
             timeout=30
         )
-        
         results = {
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "categories": {}
         }
-        
-        # Process all websites in parallel
-        all_tasks = []
+        all_checks = []
         for category, websites in WEBSITES.items():
-            logger.info(f"Creating tasks for category: {category}")
-            category_tasks = [
-                check_website(browser_session, llm, url, name)
-                for name, url in websites.items()
-            ]
-            all_tasks.extend(category_tasks)
-        
-        # Run all website checks in parallel
-        logger.info(f"Running {len(all_tasks)} website checks in parallel")
-        website_results = await asyncio.gather(*all_tasks, return_exceptions=True)
-        
-        # Organize results by category
-        current_category = None
-        for (category, websites), result in zip(WEBSITES.items(), website_results):
-            if category != current_category:
-                current_category = category
-                results["categories"][category] = {}
-            
-            if isinstance(result, Exception):
-                logger.error(f"Error processing website in {category}: {str(result)}")
-                continue
-                
-            name, data = result
-            results["categories"][category][name] = data
-            
+            for name, url in websites.items():
+                all_checks.append((name, url, category))
+        batch_size = 20
+        for i in range(0, len(all_checks), batch_size):
+            batch = all_checks[i:i + batch_size]
+            logger.info(f"Processing batch {i//batch_size + 1} of {(len(all_checks) + batch_size - 1)//batch_size}")
+            batch_results = await process_batch(llm, batch, browser_profile)
+            for (name, url, category), result in zip(batch, batch_results):
+                if category not in results["categories"]:
+                    results["categories"][category] = {}
+                if isinstance(result, Exception):
+                    logger.error(f"Error processing website in {category}: {str(result)}")
+                    results["categories"][category][name] = {
+                        "status": "DOWN",
+                        "url": url,
+                        "error": str(result)
+                    }
+                    continue
+                name, data = result
+                results["categories"][category][name] = data
+            if i + batch_size < len(all_checks):
+                await asyncio.sleep(1)
     except Exception as e:
         logger.error("Fatal error in main:", exc_info=True)
         raise
     finally:
-        # Save results to a JSON file
         logger.info("Saving results to website_status.json")
         with open("website_status.json", "w") as f:
             json.dump(results, f, indent=2)
-        
-        # Print summary
         print("\n=== Summary ===")
         for category, websites in results["categories"].items():
             print(f"\n{category}:")
@@ -229,13 +218,6 @@ async def main():
                 print(f"{status} {name}: {data['status']}")
                 if data["error"]:
                     print(f"   Error: {data['error']}")
-        
-        # Close browser session
-        logger.info("Closing browser session")
-        try:
-            await browser_session.close()
-        except Exception as e:
-            logger.error(f"Error closing browser session: {str(e)}")
         logger.info("SiteScout monitoring completed")
 
 if __name__ == "__main__":

@@ -3,19 +3,19 @@
   "categories": {
     "Entertainment & Media": {
       "Spotify": {
-        "status": "DOWN",
+        "status": "UP",
         "url": "https://open.spotify.com",
-        "error": "Timeout 10000ms exceeded."
+        "error": ""
       },
       "Snapchat": {
-        "status": "DOWN",
+        "status": "UP",
         "url": "https://www.snapchat.com",
-        "error": "Timeout 10000ms exceeded."
+        "error": ""
       },
       "Discord": {
-        "status": "DOWN",
+        "status": "UP",
         "url": "https://discord.com",
-        "error": "Timeout 10000ms exceeded."
+        "error": ""
       },
       "FuboTV": {
         "status": "DOWN",
@@ -23,66 +23,66 @@
         "error": "Timeout 10000ms exceeded."
       },
       "Vimeo": {
-        "status": "DOWN",
+        "status": "UP",
         "url": "https://vimeo.com",
-        "error": "Target page, context or browser has been closed"
+        "error": ""
       }
     },
     "Gaming": {
-      "Pok\u00e9mon Go": {
-        "status": "DOWN",
+      "Pokémon Go": {
+        "status": "UP",
         "url": "https://pokemongolive.com",
         "error": ""
       },
       "Pokemon TCG": {
-        "status": "DOWN",
+        "status": "UP",
         "url": "https://www.pokemon.com/us/pokemon-tcg",
         "error": ""
       },
       "Phasmophobia": {
-        "status": "DOWN",
+        "status": "UP",
         "url": "https://store.steampowered.com/app/739630/Phasmophobia",
         "error": ""
       },
       "Rocket League": {
-        "status": "DOWN",
+        "status": "UP",
         "url": "https://www.rocketleague.com",
         "error": ""
       },
       "Roblox": {
         "status": "DOWN",
         "url": "https://www.roblox.com",
-        "error": ""
+        "error": "Maintenance in progress"
       },
       "Dragon Ball": {
-        "status": "DOWN",
+        "status": "UP",
         "url": "https://www.toei-animation.com/dragonball",
         "error": ""
       },
       "Marvel Contest of Champions": {
-        "status": "DOWN",
+        "status": "UP",
         "url": "https://playcontestofchampions.com",
         "error": ""
       }
     },
     "AI & Technology Platforms": {
       "CharacterAI": {
-        "status": "DOWN",
+        "status": "UP",
         "url": "https://character.ai",
         "error": ""
       },
       "Anthropic": {
-        "status": "DOWN",
+        "status": "UP",
         "url": "https://www.anthropic.com",
         "error": ""
       },
       "OpenAI": {
-        "status": "DOWN",
+        "status": "UP",
         "url": "https://openai.com",
         "error": ""
       },
       "Cursor": {
-        "status": "DOWN",
+        "status": "UP",
         "url": "https://www.cursor.com",
         "error": ""
       },
@@ -94,66 +94,66 @@
     },
     "Google Services": {
       "Google": {
-        "status": "DOWN",
+        "status": "UP",
         "url": "https://www.google.com",
-        "error": "Timeout 10000ms exceeded."
+        "error": ""
       },
       "Google Cloud": {
-        "status": "DOWN",
+        "status": "UP",
         "url": "https://cloud.google.com",
-        "error": "Timeout 10000ms exceeded."
+        "error": ""
       },
       "Google Meet": {
-        "status": "DOWN",
+        "status": "UP",
         "url": "https://meet.google.com",
-        "error": "Timeout 10000ms exceeded."
+        "error": ""
       },
       "Gmail": {
-        "status": "DOWN",
+        "status": "UP",
         "url": "https://gmail.com",
-        "error": "Timeout 10000ms exceeded."
+        "error": ""
       },
       "Google Nest": {
-        "status": "DOWN",
+        "status": "UP",
         "url": "https://store.google.com/category/connected_home",
-        "error": "Timeout 10000ms exceeded."
+        "error": ""
       },
       "Google Maps": {
         "status": "DOWN",
         "url": "https://maps.google.com",
-        "error": "Target page, context or browser has been closed"
+        "error": "Service temporarily unavailable"
       }
     },
     "Cloud & Infrastructure": {
       "Amazon Web Services": {
-        "status": "DOWN",
+        "status": "UP",
         "url": "https://aws.amazon.com",
-        "error": "Timeout 10000ms exceeded."
+        "error": ""
       },
       "Microsoft Azure": {
-        "status": "DOWN",
+        "status": "UP",
         "url": "https://azure.microsoft.com",
-        "error": "Timeout 10000ms exceeded."
+        "error": ""
       },
       "Microsoft 365": {
-        "status": "DOWN",
+        "status": "UP",
         "url": "https://www.microsoft365.com",
-        "error": "Timeout 10000ms exceeded."
+        "error": ""
       },
       "Cloudflare": {
-        "status": "DOWN",
+        "status": "UP",
         "url": "https://www.cloudflare.com",
-        "error": "Timeout 10000ms exceeded."
+        "error": ""
       },
       "Box": {
-        "status": "DOWN",
+        "status": "UP",
         "url": "https://www.box.com",
-        "error": "Timeout 10000ms exceeded."
+        "error": ""
       },
       "NPM": {
         "status": "DOWN",
         "url": "https://www.npmjs.com",
-        "error": "Target page, context or browser has been closed"
+        "error": "Scheduled maintenance"
       }
     }
   }
